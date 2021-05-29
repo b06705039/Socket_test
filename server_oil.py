@@ -16,17 +16,11 @@ import atexit
 ### 3. gen_cmd(nodeid, b"\x01\x__") (__ = id + 1, ex: id = 1 => 02)
 ### 4. sendDaily msg
 
-### Configure before Launch the App
-### Oil
-
-# http://towertilt.iotwebhub.net/Oil/control.php
-
-socket_port = [ 2108, 2110 ] # 改3107, 3110 oil
-http_port = [ 2308, 2310 ] # 3207, 3210
+socket_port = [ 3107, 3110 ]
+http_port = [ 3207, 3210 ]
 sent_msg = [ '0102', '0102']
 
-Line_url = "https://maker.ifttt.com/trigger/oil/with/key/dr1GJn7pU5oJ2LqE7fKIZO"
-###
+Line_url = "https://maker.ifttt.com/trigger/Demo/with/key/iMHP9IsfpS0DbbDCMJmro16spw7fdOZxl5te3bC2eb6"
 
 
 def port_info(index):
@@ -68,8 +62,8 @@ def line_message(mes,index):
     os.system(curl)
 
 
-def handle_break(index):
-    atexit.register(line_message, "伺服程式被迫中斷")
+
+
 
 global_q = qu.Queue()
 response = ""
@@ -83,7 +77,7 @@ def handleChat(conn, addr, index):
     res_time = 0
 
     start = datetime.now()
-    nxt = datetime(start.year, start.month, start.day, , index)
+    nxt = datetime(start.year, start.month, start.day, 8, index)
 
     if start > nxt:
         nxt += timedelta(days=1)
@@ -319,14 +313,12 @@ def get_discon():
     return "discon, nodeid: {}".format(nodeid)
 
 
+atexit.register(line_message, "伺服程式被迫中斷")
+app.run(host="0.0.0.0", port=8306, debug=True, use_reloader=False)
+
 for index in range(4):
-    handle_break(index)
     if socket_port[index] != 0:
         threading.Thread(target=launch_socket, args=(index, )).start()
         time.sleep(0.5)
-        app.run(host="0.0.0.0", port=http_port[index], debug=True, use_reloader=False)
     else:
         print("%%% SET [socket_port] and [http_port] BEFORE STARTING SERVICE %%%")
-
-# IFTTT_Demo test
-# https://maker.ifttt.com/trigger/DemoTest/with/key/iMHP9IsfpS0DbbDCMJmro16spw7fdOZxl5te3bC2eb6
