@@ -313,12 +313,14 @@ def get_discon():
     return "discon, nodeid: {}".format(nodeid)
 
 
-atexit.register(line_message, "伺服程式被迫中斷")
-app.run(host="0.0.0.0", port=8306, debug=True, use_reloader=False)
 
-for index in range(4):
+
+for index in range(2):
     if socket_port[index] != 0:
         threading.Thread(target=launch_socket, args=(index, )).start()
         time.sleep(0.5)
     else:
         print("%%% SET [socket_port] and [http_port] BEFORE STARTING SERVICE %%%")
+
+atexit.register(line_message, "伺服程式被迫中斷")
+app.run(host="0.0.0.0", port=8306, debug=True, use_reloader=False)
