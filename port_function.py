@@ -9,6 +9,7 @@ import requests
 import traceback
 import os
 import atexit
+import sys
 
 ### Diff between Oil servers:
 ### 1. socket_port & http_port
@@ -18,23 +19,17 @@ import atexit
 
 ### Configure before Launch the App
 ### Oil
-
-# http://towertilt.iotwebhub.net/Oil/control.php
-
-socket_port = [ 2108, 2110 ] # 改3107, 3110 oil
-http_port = [ 2308, 2310 ] # 3207, 3210
-sent_msg = [ '0102', '0102']
-
-Line_url = "https://maker.ifttt.com/trigger/oil/with/key/dr1GJn7pU5oJ2LqE7fKIZO"
+socket_port = sys.argv[1]
+http_port = sys.argv[2]
+sent_msg = sys.argv[3]
+Line_url = sys.argv[4]
 ###
 
-
-def port_info(index):
-    return "\nsocket_port:{}, http_port:{}\n".format(socket_port[index], http_port[index])
+port_info = "\nsocket_port:{}, http_port:{}\n".format(socket_port, http_port)
 
 
-def go_to_log(e, index):
-    log_path = "./recv_p{}.log".format(socket_port[index])
+def go_to_log(e):
+    log_path = "./recv_p{}.log".format(socket_port)
     with open(log_path, "a", newline="") as f:
         f.write(str(e))
 
@@ -59,17 +54,16 @@ def sendDaily(msg):
     requests.post(url, data=payload)
 
 
-def line_message(mes,index):
+def line_message(mes):
     print("Offline warning!")
     curl = (
         'curl -X POST -H "Content-Type: application/json" -d \'{"value1": "%s", "value2": "%d", "value3": "%s"}\' https://maker.ifttt.com/trigger/Offline/with/key/gGxGAp8lK5x806_GrrJO6LIvLctRATq3cnd_bN73zxC'
-        % ("111.185.9.227", http_port[index], mes)
+        % ("111.185.9.227", http_port, mes)
     )
     os.system(curl)
 
 
-def handle_break(index):
-    atexit.register(line_message, "伺服程式被迫中斷")
+atexit.register(line_message, "伺服程式被迫中斷")
 
 global_q = qu.Queue()
 response = ""
@@ -77,13 +71,13 @@ res_03 = ""
 comp_res = False
 
 
-def handleChat(conn, addr, index):
+def handleChat(conn, addr):
     global response
     print("\nConnected by {}\n".format(addr))
     res_time = 0
 
     start = datetime.now()
-    nxt = datetime(start.year, start.month, start.day, , index)
+    nxt = datetime(start.year, start.month, start.day, 8, 1)
 
     if start > nxt:
         nxt += timedelta(days=1)
@@ -94,18 +88,19 @@ def handleChat(conn, addr, index):
 
         time_start = time.time()
         data = conn.recv(11)
+        print(data)
         if time.time() - time_start >= 60 * 9 + 30:
-            line_message('超過10分鐘未收到心跳封包"w"',index)
+            line_message('超過10分鐘未收到心跳封包"w"')
 
         start = datetime.now()
         if start > nxt:
-            nxt = datetime(start.year, start.month, start.day, 8, index)
+            nxt = datetime(start.year, start.month, start.day, 8, 1)
             nxt += timedelta(days=1)
 
             if data == b"w":
-                msg = "<br>5. O | 油壓 | port " + str(socket_port[index]) + " 有心跳"
+                msg = "<br>油壓 2 | port 2003 有心跳"
                 threading.Thread(target=sendDaily, args=(msg,)).start()
-            msg = "<br>6. O | 油壓 | python3 /home/oem/Socket_2020/server_p"+str(socket_port[index])+".py 有服務"
+            msg = "<br>油壓 2 | python3 /home/oem/Socket_2020/server_p2003.py 有服務"
             threading.Thread(target=sendDaily, args=(msg,)).start()
 
         time.sleep(0.1)
@@ -136,7 +131,7 @@ def handleChat(conn, addr, index):
                     # Get D3 status
                     d3 = int(res[6:8], 16)
                     # MySQL SELECT query
-                    query = "SELECT `name` FROM `mobile_1` WHERE `id` = "+str(index+1)
+                    query = "SELECT `name` FROM `mobile_1` WHERE `id` = 2"
                     cur_mob.execute(query)
                     node_name = cur_mob.fetchall()[0][0]
                     # MySQL INSERT query
@@ -155,17 +150,17 @@ def handleChat(conn, addr, index):
                     )
                     threading.Thread(target=sendLine, args=(msg,)).start()
 
-                    go_to_log(msg,index)
+                    go_to_log(msg)
 
-                if int(res[4:6], 16) == 3:
+                if len(res)>=6 and int(res[4:6], 16) == 3:
                     response = ""
                     res_time = time.time()
 
             except:
                 print("Error code 03\n")
                 print(traceback.format_exc())
-                go_to_log("Error code 03", index)
-                go_to_log(traceback.format_exc(), index)
+                go_to_log("Error code 03")
+                go_to_log(traceback.format_exc())
 
         # For logging
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -174,14 +169,14 @@ def handleChat(conn, addr, index):
             if len(d_str) > 0:
                 if d_str != "w":
                     log_str = "\n{} | Recv: {} | {}".format(now_str, d_str, "".join("{:02x}".format(d) for d in data))
-                    go_to_log(log_str, index)
-                    go_to_log(port_info(index), index)
+                    go_to_log(log_str)
+                    go_to_log(port_info)
                 else:
-                    go_to_log(d_str, index)  # "w" (0x77)
+                    go_to_log(d_str)  # "w" (0x77)
         except:
             hex_str = ":".join("{:02x}".format(d) for d in data)
             print("\nRAW: {}\n".format(hex_str))
-            go_to_log("\n{} | {}{}".format(now_str, hex_str, port_info(index)), index)
+            go_to_log("\n{} | {}{}".format(now_str, hex_str, port_info))
 
         # Handle command sending
         global global_q
@@ -203,9 +198,9 @@ def handleChat(conn, addr, index):
 
 
 # For threading launch
-def launch_socket(index):
+def launch_socket():
     HOST = "0.0.0.0"
-    PORT = socket_port[index]
+    PORT = socket_port
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.settimeout(60 * 10)
@@ -213,9 +208,9 @@ def launch_socket(index):
     s.listen(5)
     # Logging
     print("\n***** socket launched")
-    print(" ***** {}\n".format(port_info(index)))
-    go_to_log("\n***** socket launched", index)
-    go_to_log(" ***** {}\n".format(port_info(index)), index)
+    print(" ***** {}\n".format(port_info))
+    go_to_log("\n***** socket launched")
+    go_to_log(" ***** {}\n".format(port_info))
 
     while True:
         connection, client_address = s.accept()
@@ -225,7 +220,6 @@ def launch_socket(index):
             args=(
                 connection,
                 client_address,
-                index
             ),
         ).start()
 
@@ -267,8 +261,7 @@ def init_stat():
 
         global global_q
         if global_q.qsize() == 0:
-
-            cmd = gen_cmd(nodeid, bytes.fromhex(sent_msg[index]))
+            cmd = gen_cmd(nodeid, bytes.fromhex(sent_msg))
             global_q.put(cmd)
             print("\nGET: INIT_STAT")
             return "OK"
@@ -319,14 +312,9 @@ def get_discon():
     return "discon, nodeid: {}".format(nodeid)
 
 
-for index in range(4):
-    handle_break(index)
-    if socket_port[index] != 0:
-        threading.Thread(target=launch_socket, args=(index, )).start()
-        time.sleep(0.5)
-        app.run(host="0.0.0.0", port=http_port[index], debug=True, use_reloader=False)
-    else:
-        print("%%% SET [socket_port] and [http_port] BEFORE STARTING SERVICE %%%")
-
-# IFTTT_Demo test
-# https://maker.ifttt.com/trigger/DemoTest/with/key/iMHP9IsfpS0DbbDCMJmro16spw7fdOZxl5te3bC2eb6
+if socket_port != 0:
+    threading.Thread(target=launch_socket).start()
+    time.sleep(0.5)
+    app.run(host="0.0.0.0", port=http_port, debug=True, use_reloader=False)
+else:
+    print("%%% SET [socket_port] and [http_port] BEFORE STARTING SERVICE %%%")
