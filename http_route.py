@@ -15,10 +15,14 @@ from util import Utils
 
 socket_port = int(sys.argv[1])
 http_port = int(sys.argv[2])
+index = int(sys.argv[5])
 db_name = 'Oil'
 db_user = 'oil'
 
+
+print("into http_route, not yet run utils")
 util = Utils(http_port, socket_port, db_name, db_user)
+print("in http_route, after run utils")
 
 atexit.register(util.sendLine, "伺服程式被迫中斷")
 # For threading launch
@@ -86,13 +90,13 @@ def get_discon():
     return "discon, nodeid: {}".format(nodeid)
 
 data = {}
-data['mins'] = 0
-data['msgs'] = ['<br>1. O | 油壓 | port 2001 有心跳',
-    '<br>2. O | 油壓 | python3 /home/oem/Socket_2020/server_p2001.py 有服務'
+data['mins'] = index
+data['msgs'] = ['<br>1. O | 油壓 | port ' + str(socket_port) + ' 有心跳',
+    '<br>2. O | 油壓 | python3 /home/oem/Socket_2020/' + str(socket_port) + ' 有服務'
 ]
-data['mobile_db_name'] = 'mobile_1'
-data['mobile_db_id'] = '1'
-data['history_db_name'] = 'history_1'
+data['mobile_db_name'] = 'mobile_3'
+data['mobile_db_id'] = '3'
+data['history_db_name'] = 'history_3'
 
 if socket_port != 0:
     threading.Thread(target=util.launch_socket, args=(data,)).start()
