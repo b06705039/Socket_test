@@ -261,7 +261,7 @@ def init_stat():
 
         global global_q
         if global_q.qsize() == 0:
-            cmd = gen_cmd(nodeid, bytes.fromhex(sent_msg))
+            cmd = gen_cmd(nodeid, b"\x01\x02")
             global_q.put(cmd)
             print("\nGET: INIT_STAT")
             return "OK"
