@@ -19,8 +19,8 @@ import sys
 
 ### Configure before Launch the App
 ### Oil
-socket_port = sys.argv[1]
-http_port = sys.argv[2]
+socket_port = int(sys.argv[1])
+http_port = int(sys.argv[2])
 sent_msg = sys.argv[3]
 Line_url = sys.argv[4]
 ###
