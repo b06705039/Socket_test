@@ -101,6 +101,6 @@ data['history_db_name'] = 'history_3'
 if socket_port != 0:
     threading.Thread(target=util.launch_socket, args=(data,)).start()
     time.sleep(0.5)
-    app.run(host="0.0.0.0", port=http_port, debug=True, use_reloader=False)
+    app.run(host="192.168.1.40", port=http_port, debug=True, use_reloader=False)
 else:
     print("%%% SET [socket_port] and [http_port] BEFORE STARTING SERVICE %%%")
