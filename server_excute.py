@@ -10,4 +10,4 @@ Line_url = "https://maker.ifttt.com/trigger/DemoTest/with/key/iMHP9IsfpS0DbbDCMJ
 
 
 for i in range(2):
-    Popen(["python3", "Socket_test/http_route.py", socket_port[i], http_port[i], sent_msg[i], Line_url, str(i)])
+    Popen(["python3", "http_route.py", socket_port[i], http_port[i], sent_msg[i], Line_url, str(i)])
